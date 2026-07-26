@@ -1,0 +1,200 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payees        Payee[]
+  plans         Plan[]
+  events        Event[]
+  runs          CalculationRun[]
+  statements    Statement[]
+  payoutExports PayoutExport[]
+}
+
+model Payee {
+  id         String   @id @default(cuid())
+  orgId      String
+  externalId String
+  name       String
+  email      String?
+  role       String?
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  org          Organization      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  assignments  PlanAssignment[]
+  calcLines    CalculationLine[]
+  statements   Statement[]
+
+  @@unique([orgId, externalId])
+  @@index([orgId])
+}
+
+model Plan {
+  id          String   @id @default(cuid())
+  orgId       String
+  name        String
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  org         Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  versions    PlanVersion[]
+  assignments PlanAssignment[]
+  runs        CalculationRun[]
+
+  @@index([orgId])
+}
+
+model PlanVersion {
+  id         String   @id @default(cuid())
+  planId     String
+  version    Int
+  definition Json
+  note       String?
+  createdAt  DateTime @default(now())
+
+  plan Plan             @relation(fields: [planId], references: [id], onDelete: Cascade)
+  runs CalculationRun[]
+
+  @@unique([planId, version])
+  @@index([planId])
+}
+
+model PlanAssignment {
+  id        String   @id @default(cuid())
+  planId    String
+  payeeId   String
+  startDate DateTime
+  endDate   DateTime?
+  createdAt DateTime @default(now())
+
+  plan  Plan  @relation(fields: [planId], references: [id], onDelete: Cascade)
+  payee Payee @relation(fields: [payeeId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, payeeId, startDate])
+  @@index([payeeId])
+}
+
+enum EventType {
+  deal_created
+  deal_updated
+  deal_deleted
+}
+
+model Event {
+  id             String    @id @default(cuid())
+  orgId          String
+  type           EventType
+  dealExternalId String
+  payload        Json
+  source         String    @default("csv")
+  idempotencyKey String?
+  occurredAt     DateTime
+  ingestedAt     DateTime  @default(now())
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, idempotencyKey])
+  @@index([orgId, dealExternalId])
+  @@index([orgId, occurredAt])
+}
+
+enum RunStatus {
+  pending
+  completed
+  failed
+}
+
+model CalculationRun {
+  id            String    @id @default(cuid())
+  orgId         String
+  planId        String
+  planVersionId String
+  periodStart   DateTime
+  periodEnd     DateTime
+  status        RunStatus @default(pending)
+  error         String?
+  createdAt     DateTime  @default(now())
+
+  org         Organization      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  plan        Plan              @relation(fields: [planId], references: [id], onDelete: Cascade)
+  planVersion PlanVersion       @relation(fields: [planVersionId], references: [id], onDelete: Cascade)
+  lines       CalculationLine[]
+  statements  Statement[]
+  exports     PayoutExport[]
+
+  @@index([orgId, planId])
+}
+
+model CalculationLine {
+  id           String  @id @default(cuid())
+  runId        String
+  payeeId      String
+  dealExternalId String
+  componentId  String
+  componentName String
+  basis        Float
+  rate         Float
+  amount       Float
+  detail       Json
+
+  run   CalculationRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  payee Payee          @relation(fields: [payeeId], references: [id], onDelete: Cascade)
+
+  @@index([runId, payeeId])
+}
+
+enum StatementStatus {
+  draft
+  approved
+  paid
+}
+
+model Statement {
+  id              String          @id @default(cuid())
+  orgId           String
+  runId           String
+  payeeId         String
+  periodStart     DateTime
+  periodEnd       DateTime
+  totalCommission Float
+  dealsCount      Int
+  status          StatementStatus @default(draft)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  org   Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  run   CalculationRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  payee Payee          @relation(fields: [payeeId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, payeeId])
+  @@index([orgId, payeeId])
+}
+
+model PayoutExport {
+  id        String   @id @default(cuid())
+  orgId     String
+  runId     String
+  format    String   @default("csv")
+  rowCount  Int
+  fileName  String
+  createdAt DateTime @default(now())
+
+  org Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  run CalculationRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+}
