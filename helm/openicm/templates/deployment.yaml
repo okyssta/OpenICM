@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openicm
+  labels:
+    app.kubernetes.io/name: openicm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: openicm
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: openicm
+    spec:
+      containers:
+        - name: app
+          image: "openicm/app:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          env:
+            - name: DATABASE_URL
+              value: "postgresql://openicm:openicm@openicm-postgresql:5432/openicm?schema=public"
+            - name: SEED_ON_START
+              value: "false"
+            - name: APP_PASSWORD
+              value: ""
+            - name: AUTH_SECRET
+              value: "change-me"
+          resources:
+            limits:
+              memory: 512Mi
+              cpu: 500m
+            requests:
+              memory: 256Mi
+              cpu: 250m
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: openicm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3000
+      targetPort: 3000
+  selector:
+    app.kubernetes.io/name: openicm
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: openicm
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  rules:
+    - host: openicm.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: openicm
+                port:
+                  number: 3000

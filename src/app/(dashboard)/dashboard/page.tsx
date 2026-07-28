@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Handshake, Users, ClipboardList, Wallet, Plus, Play } from "lucide-react";
+import { Handshake, Users, ClipboardList, Wallet, Plus, Play, TrendingUp } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,14 @@ type Statement = {
   createdAt: string;
   payee: { name: string };
   run: { plan: { name: string }; periodStart: string; periodEnd: string };
+};
+
+type Run = {
+  id: string;
+  periodStart: string;
+  periodEnd: string;
+  plan: { name: string };
+  _count: { statements: number };
 };
 
 type Stats = {
@@ -50,7 +58,9 @@ export default function DashboardPage() {
   const [payees, setPayees] = useState(0);
   const [plans, setPlans] = useState(0);
   const [statements, setStatements] = useState<Statement[]>([]);
+  const [runs, setRuns] = useState<Run[]>([]);
   const [loading, setLoading] = useState(true);
+  const [runsLoading, setRunsLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
@@ -58,12 +68,14 @@ export default function DashboardPage() {
       fetch("/api/payees").then((r) => r.json()),
       fetch("/api/plans").then((r) => r.json()),
       fetch("/api/statements").then((r) => r.json()),
+      fetch("/api/runs").then((r) => r.json()),
     ])
-      .then(([d, p, pl, s]) => {
+      .then(([d, p, pl, s, r]) => {
         setDeals(d.count ?? 0);
         setPayees(p.payees?.length ?? 0);
         setPlans(pl.plans?.length ?? 0);
         setStatements(s.statements?.slice(0, 8) ?? []);
+        setRuns(r.runs ?? []);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -151,6 +163,34 @@ export default function DashboardPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Forecast / trend card */}
+        {runs.length > 1 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4" /> Commission trend
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {runs.slice(0, 6).map((r) => (
+                  <Link
+                    key={r.id}
+                    href="/payouts"
+                    className="flex items-center justify-between rounded-md border border-border px-4 py-2 text-sm transition-colors hover:bg-muted/50"
+                  >
+                    <span className="text-muted-foreground">
+                      {formatDate(r.periodStart)} – {formatDate(r.periodEnd)}
+                    </span>
+                    <span className="font-medium">{r.plan.name}</span>
+                    <span className="text-xs text-muted-foreground">{r._count.statements} payee(s)</span>
+                  </Link>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </>
   );

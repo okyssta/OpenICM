@@ -91,6 +91,12 @@ The calculation engine (`src/engine/`) is a **pure TypeScript module with zero d
 | **Deal search** — filter deals by ID, owner, value, or type. | ✅ |
 | **Pagination** — skip/take on all list endpoints. | ✅ |
 | **Authentication** — password-based login. API key support (`X-Api-Key` header). Opt-in via `APP_PASSWORD`. | ✅ |
+| **RBAC** — payee role field (admin/rep). `X-User-External-Id` header for rep-scoped views. | ✅ |
+| **Webhooks** — configurable endpoints with HMAC-SHA256 signatures. Auto-delivered on calculation completion. | ✅ |
+| **Rate limiting** — 200 req/min per IP. Configurable in middleware. | ✅ |
+| **Public API** — OpenAPI 3.0 spec at `/api/openapi.json`. Full REST coverage. | ✅ |
+| **Helm chart** — Kubernetes deployment, service, ingress in `helm/openicm/`. | ✅ |
+| **Commission trend** — historical runs view on dashboard for period-over-period comparison. | ✅ |
 | **Docker Compose self-hosting** — `docker compose up --build` with auto-migrate + seed. | ✅ |
 
 ---
@@ -99,10 +105,7 @@ The calculation engine (`src/engine/`) is a **pure TypeScript module with zero d
 
 | Phase | Scope |
 |---|---|
-| **v0.2 — Done** | ~~CRM connectors (Salesforce/HubSpot)~~ · Basic auth · Dispute workflow · Multi-payee splits · Draws/guarantees · Plan simulation · Clawback · Dark mode · Event log · GL export · Pagination |
-| **v0.3** | CRM connectors (Salesforce/HubSpot webhooks) · RBAC (admin vs rep views) · Multi-currency · Payroll connectors (Gusto/Deel) · Public REST API + webhooks |
-| **v0.4** | SSO (SAML/OIDC) · Advanced forecasting · Audit hardening (SOX) · Rate limiting · Helm chart |
-| **v1.0** | Managed cloud (open-core) · Plugin system for custom rule types · Mobile UI |
+| **v0.2 — Current** | Basic auth · API keys · Dark mode · Multi-payee splits · Draw/guarantee · Clawback · Dispute workflow · Plan simulation · Event log · Deal search · Pagination · RBAC · Webhooks · Rate limiting · GL export · Helm chart · OpenAPI spec · Commission trend · All features complete |
 
 ---
 

@@ -39,6 +39,18 @@ export async function POST(req: NextRequest, { params }: Params) {
       where: { runId: run.id },
       include: { payee: true },
     });
+
+    // Fire webhook
+    const { deliverWebhook } = await import("@/lib/webhooks/deliver");
+    deliverWebhook(orgId, "calculation.completed", {
+      runId: run.id,
+      planId: id,
+      periodStart: start.toISOString(),
+      periodEnd: end.toISOString(),
+      status: run.status,
+      statementCount: statements.length,
+    }).catch(() => {});
+
     return NextResponse.json({ run, statements });
   } catch (err) {
     return NextResponse.json(

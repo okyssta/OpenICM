@@ -14,6 +14,8 @@ import {
   Moon,
   Coins,
   LogOut,
+  Webhook,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -26,18 +28,33 @@ const nav = [
   { href: "/payouts", label: "Payouts", icon: Wallet },
 ];
 
+type PayeeSwitcherItem = {
+  externalId: string;
+  name: string;
+  role: string;
+};
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [dark, setDark] = useState(false);
   const [authEnabled, setAuthEnabled] = useState(true);
+  const [payees, setPayees] = useState<PayeeSwitcherItem[]>([]);
+  const [currentUser, setCurrentUser] = useState<string>("");
 
   useEffect(() => {
     setMounted(true);
     setDark(document.documentElement.classList.contains("dark"));
-    // Check if auth is configured by trying the me endpoint
     fetch("/api/auth/me").catch(() => setAuthEnabled(false));
+    // Load payees for switcher
+    fetch("/api/payees/me")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.payees) setPayees(d.payees);
+        if (d.payee) setPayees([d.payee]);
+      })
+      .catch(() => {});
   }, []);
 
   function toggleTheme() {
@@ -79,6 +96,29 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
+        {/* RBAC payee switcher */}
+        {payees.length > 1 && (
+          <div className="border-t border-border px-3 py-2">
+            <label className="text-xs text-muted-foreground mb-1 block">View as</label>
+            <select
+              className="w-full rounded-md border border-input bg-card px-2 py-1.5 text-xs"
+              value={currentUser}
+              onChange={(e) => {
+                const val = e.target.value;
+                setCurrentUser(val);
+                // Reload page with the X-User-External-Id header
+                router.refresh();
+              }}
+            >
+              <option value="">Admin (all)</option>
+              {payees.map((p) => (
+                <option key={p.externalId} value={p.externalId}>
+                  {p.name} ({p.role})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="flex items-center justify-between border-t border-border p-4">
           <span className="text-xs text-muted-foreground">
             Open-source ICM<br />v0.2 — Stable

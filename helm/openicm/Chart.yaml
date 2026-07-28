@@ -1,0 +1,11 @@
+apiVersion: v2
+name: openicm
+description: Open-source Incentive Compensation Management engine
+type: application
+version: 0.2.0
+appVersion: "0.2.0"
+keywords:
+  - icm
+  - commissions
+  - compensation
+  - sales

@@ -1,0 +1,35 @@
+app:
+  replicaCount: 1
+  image:
+    repository: openicm/app
+    tag: latest
+    pullPolicy: IfNotPresent
+  port: 3000
+  env:
+    DATABASE_URL: "postgresql://openicm:openicm@openicm-postgresql:5432/openicm?schema=public"
+    SEED_ON_START: "false"
+    APP_PASSWORD: ""
+    AUTH_SECRET: "change-me-in-production"
+
+postgresql:
+  enabled: true
+  auth:
+    username: openicm
+    password: openicm
+    database: openicm
+  primary:
+    persistence:
+      size: 10Gi
+
+ingress:
+  enabled: true
+  host: openicm.example.com
+  tls: true
+
+resources:
+  limits:
+    memory: 512Mi
+    cpu: 500m
+  requests:
+    memory: 256Mi
+    cpu: 250m
