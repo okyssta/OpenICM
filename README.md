@@ -23,6 +23,19 @@ docker compose up --build -d
 
 ---
 
+## Screenshots
+
+![Dashboard](screenshots/dashboard.png)
+![Deals](screenshots/deals.png)
+![Plan detail](screenshots/plan-detail.png)
+![Statements](screenshots/statements.png)
+![Payouts](screenshots/payouts.png)
+![Event log](screenshots/events.png)
+![Dark mode](screenshots/dashboard-dark.png)
+![Login](screenshots/login.png)
+
+---
+
 ## Why This Exists
 
 | Problem | Impact |
