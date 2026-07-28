@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Handshake, Users, ClipboardList, Wallet } from "lucide-react";
+import { Handshake, Users, ClipboardList, Wallet, Plus, Play } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { CardSkeleton, TableSkeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
 type Statement = {
@@ -18,15 +20,14 @@ type Statement = {
   run: { plan: { name: string }; periodStart: string; periodEnd: string };
 };
 
-function Stat({
-  label,
-  value,
-  icon: Icon,
-}: {
-  label: string;
-  value: string | number;
-  icon: React.ElementType;
-}) {
+type Stats = {
+  deals: number;
+  payees: number;
+  plans: number;
+  statements: number;
+};
+
+function Stat({ label, value, icon: Icon, loading }: { label: string; value: string | number; icon: React.ElementType; loading?: boolean }) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -34,7 +35,11 @@ function Stat({
         <Icon className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+        {loading ? (
+          <div className="h-8 w-24 animate-pulse rounded bg-muted" />
+        ) : (
+          <div className="text-2xl font-bold">{value}</div>
+        )}
       </CardContent>
     </Card>
   );
@@ -64,6 +69,7 @@ export default function DashboardPage() {
   }, []);
 
   const totalPaid = statements.reduce((s, x) => s + x.totalCommission, 0);
+  const hasData = deals > 0 || payees > 0 || plans > 0;
 
   return (
     <>
@@ -73,13 +79,14 @@ export default function DashboardPage() {
       />
       <div className="space-y-6 p-8">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Stat label="Deals ingested" value={loading ? "—" : deals} icon={Handshake} />
-          <Stat label="Payees" value={loading ? "—" : payees} icon={Users} />
-          <Stat label="Plans" value={loading ? "—" : plans} icon={ClipboardList} />
+          <Stat label="Deals ingested" value={loading ? "—" : deals} icon={Handshake} loading={loading} />
+          <Stat label="Payees" value={loading ? "—" : payees} icon={Users} loading={loading} />
+          <Stat label="Plans" value={loading ? "—" : plans} icon={ClipboardList} loading={loading} />
           <Stat
             label="Latest statements"
             value={loading ? "—" : formatCurrency(totalPaid)}
             icon={Wallet}
+            loading={loading}
           />
         </div>
 
@@ -88,10 +95,33 @@ export default function DashboardPage() {
             <CardTitle>Recent statements</CardTitle>
           </CardHeader>
           <CardContent>
-            {statements.length === 0 ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">
-                No statements yet. Import deals, create a plan, and run a calculation.
-              </p>
+            {loading ? (
+              <TableSkeleton rows={3} />
+            ) : statements.length === 0 ? (
+              <div className="py-8 text-center">
+                <p className="text-sm text-muted-foreground mb-4">
+                  No statements yet. Import deals, create a plan, and run a calculation.
+                </p>
+                <div className="flex items-center justify-center gap-3">
+                  <Link href="/deals">
+                    <Button variant="outline" size="sm">
+                      <Plus className="h-4 w-4" /> Import deals
+                    </Button>
+                  </Link>
+                  <Link href="/plans/new">
+                    <Button variant="outline" size="sm">
+                      <ClipboardList className="h-4 w-4" /> Create plan
+                    </Button>
+                  </Link>
+                  {plans > 0 && (
+                    <Link href="/plans">
+                      <Button size="sm">
+                        <Play className="h-4 w-4" /> Run calculation
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              </div>
             ) : (
               <div className="space-y-2">
                 {statements.map((s) => (

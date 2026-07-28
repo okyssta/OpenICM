@@ -2,12 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   Handshake,
   ClipboardList,
   FileText,
   Wallet,
+  ScrollText,
+  Sun,
+  Moon,
   Coins,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -15,6 +19,7 @@ import { cn } from "@/lib/utils";
 const nav = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/deals", label: "Deals", icon: Handshake },
+  { href: "/events", label: "Events", icon: ScrollText },
   { href: "/plans", label: "Plans", icon: ClipboardList },
   { href: "/statements", label: "Statements", icon: FileText },
   { href: "/payouts", label: "Payouts", icon: Wallet },
@@ -22,6 +27,21 @@ const nav = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+  const [dark, setDark] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    setDark(document.documentElement.classList.contains("dark"));
+  }, []);
+
+  function toggleTheme() {
+    const next = !dark;
+    setDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    try { localStorage.setItem("theme", next ? "dark" : "light"); } catch {}
+  }
+
   return (
     <div className="flex min-h-screen">
       <aside className="sticky top-0 flex h-screen w-60 flex-col border-r border-border bg-card">
@@ -49,9 +69,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
-        <div className="border-t border-border p-4 text-xs text-muted-foreground">
-          Open-source ICM engine
-          <br />v0.1 — MVP
+        <div className="flex items-center justify-between border-t border-border p-4">
+          <span className="text-xs text-muted-foreground">
+            Open-source ICM<br />v0.1 — MVP
+          </span>
+          {mounted && (
+            <button
+              onClick={toggleTheme}
+              className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+              aria-label="Toggle dark mode"
+            >
+              {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+          )}
         </div>
       </aside>
       <main className="flex-1 overflow-x-hidden">{children}</main>

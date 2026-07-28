@@ -1,11 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Upload, RefreshCw } from "lucide-react";
+import { Upload, RefreshCw, Search } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -35,6 +36,7 @@ export default function DealsPage() {
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(() => {
@@ -48,6 +50,17 @@ export default function DealsPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  const filtered = deals.filter((d) => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (
+      d.externalId.toLowerCase().includes(q) ||
+      d.owner.toLowerCase().includes(q) ||
+      String(d.fields.value ?? "").includes(q) ||
+      (d.fields.type as string)?.toLowerCase().includes(q)
+    );
+  });
 
   async function doImport(text: string) {
     if (!text.trim()) return;
@@ -139,15 +152,24 @@ export default function DealsPage() {
         </Card>
 
         <Card className="lg:col-span-3">
-          <CardHeader>
-            <CardTitle>Current deals ({deals.length})</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Current deals ({filtered.length})</CardTitle>
+            <div className="relative w-64">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search deals..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-8 h-9"
+              />
+            </div>
           </CardHeader>
           <CardContent>
             {loading ? (
               <p className="py-8 text-center text-sm text-muted-foreground">Loading…</p>
-            ) : deals.length === 0 ? (
+            ) : filtered.length === 0 ? (
               <p className="py-8 text-center text-sm text-muted-foreground">
-                No deals yet. Import a CSV to get started.
+                {search ? "No deals match your search." : "No deals yet. Import a CSV to get started."}
               </p>
             ) : (
               <Table>
@@ -161,7 +183,7 @@ export default function DealsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {deals.map((d) => (
+                  {filtered.map((d) => (
                     <TableRow key={d.externalId}>
                       <TableCell className="font-mono text-xs">{d.externalId}</TableCell>
                       <TableCell>{d.owner}</TableCell>
