@@ -2,7 +2,7 @@
 set -e
 
 echo "[openicm] Applying database schema..."
-npx prisma migrate deploy 2>/dev/null || npx prisma db push --skip-generate
+npx prisma db push --skip-generate || echo "[openicm] Schema push failed, continuing..."
 
 if [ "$SEED_ON_START" = "true" ]; then
   echo "[openicm] Seeding sample data..."

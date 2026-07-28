@@ -15,20 +15,11 @@ Companies with variable pay — sales reps, partner programs, affiliates, recrui
 ```bash
 git clone https://github.com/kyssta-exe/OpenICM.git
 cd OpenICM
-docker compose up --build
+docker compose up --build -d
 # → http://localhost:3000 (sample data pre-loaded)
 ```
 
-### First-Time Flow
-
-1. **Dashboard** — see your org stats at a glance
-2. **Deals** → click "Load sample" → **Import** (or paste your own CSV)
-3. **Plans** → **New plan** → configure rules → assign payees → **Create**
-4. Open the plan → **Calculate commissions** (leave dates blank for current period)
-5. **Statements** → open one to see the per-deal audit trail → **Approve**
-6. **Payouts** → find the run → **CSV** to export
-
-> **Local dev?** See the [handoff document](handoff.md#8-running-the-project) for non-Docker setup.
+**First time?** See the [Setup Guide](SETUP.md) for Docker and local development instructions, first-time user flow, API reference, and production deployment tips.
 
 ---
 
