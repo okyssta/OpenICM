@@ -15,7 +15,6 @@ import {
   Coins,
   LogOut,
   Webhook,
-  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +25,7 @@ const nav = [
   { href: "/plans", label: "Plans", icon: ClipboardList },
   { href: "/statements", label: "Statements", icon: FileText },
   { href: "/payouts", label: "Payouts", icon: Wallet },
+  { href: "/webhooks", label: "Webhooks", icon: Webhook },
 ];
 
 type PayeeSwitcherItem = {

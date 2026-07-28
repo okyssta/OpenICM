@@ -1,38 +1,35 @@
 # OpenICM
 
-**Open-source Incentive Compensation Management (ICM) — a self-hostable alternative to CaptivateIQ, Xactly, and Spiff.**
+**Open-source Incentive Compensation Management — a self-hostable alternative to CaptivateIQ, Xactly, and Spiff.**
+
+<div align="center">
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
-![Status](https://img.shields.io/badge/Status-v0.2--stable-green)
-[![Build](https://img.shields.io/badge/Build-passing-brightgreen)]()
+![Status](https://img.shields.io/badge/Status-v0.2--stable-brightgreen)
+[![Build](https://github.com/kyssta-exe/OpenICM/actions/workflows/ci.yml/badge.svg)](https://github.com/kyssta-exe/OpenICM/actions)
+[![Docker](https://img.shields.io/badge/docker-ready-2496ED?logo=docker)](https://hub.docker.com/r/kysstaexe/openicm)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
 
-Companies with variable pay — sales reps, partner programs, affiliates, recruiters — outgrow spreadsheets fast. Manual commission calc is error-prone, unauditable, and breaks the moment a plan has tiers, accelerators, clawbacks, splits, or a retroactively-edited deal. **OpenICM is the first open-source system that solves this end-to-end.**
+**[✨ Live Demo](https://openicm.example.com) · [📖 Docs](SETUP.md) · [🐛 Report Bug](https://github.com/kyssta-exe/OpenICM/issues) · [💬 Discussions](https://github.com/kyssta-exe/OpenICM/discussions)**
+
+</div>
 
 ---
 
-## Quick Start
+Companies with variable pay — sales reps, partner programs, affiliates, recruiters — outgrow spreadsheets fast. Manual commission calc is error-prone, unauditable, and breaks the moment a plan has tiers, accelerators, clawbacks, splits, or retroactively-edited deals. **OpenICM is the first open-source system that solves this end-to-end.**
+
+**Try it in 30 seconds:**
 
 ```bash
-git clone https://github.com/kyssta-exe/OpenICM.git
-cd OpenICM
-docker compose up --build -d
+docker run --rm -p 3000:3000 ghcr.io/kyssta-exe/openicm
 # → http://localhost:3000 (sample data pre-loaded)
 ```
 
-**First time?** See the [Setup Guide](SETUP.md) for Docker and local development instructions, first-time user flow, API reference, and production deployment tips.
+Or deploy instantly:
 
----
-
-## Screenshots
-
-![Dashboard](screenshots/dashboard.png)
-![Deals](screenshots/deals.png)
-![Plan detail](screenshots/plan-detail.png)
-![Statements](screenshots/statements.png)
-![Payouts](screenshots/payouts.png)
-![Event log](screenshots/events.png)
-![Dark mode](screenshots/dashboard-dark.png)
-![Login](screenshots/login.png)
+[![Deploy to Railway](https://img.shields.io/badge/Deploy-Railway-0B0D0E?logo=railway)](https://railway.app/template/openicm)
+[![Deploy to Render](https://img.shields.io/badge/Deploy-Render-46E3B7?logo=render)](https://render.com/deploy?repo=https://github.com/kyssta-exe/OpenICM)
+[![Deploy on Zeabur](https://img.shields.io/badge/Deploy-Zeabur-FA5252?logo=zeabur)](https://zeabur.com/templates/openicm)
 
 ---
 
@@ -45,67 +42,92 @@ docker compose up --build -d
 | Retroactive deal edits corrupt payouts | Without event sourcing, past periods are irrecoverable |
 | No audit trail | Reps can't see *why*, finance can't audit *what* |
 
-Unlike CRM, billing, or support — which all have credible open-source incumbents (Chatwoot, Cal.com, Lago) — **commission/ICM had no serious open-source project until now.**
+Unlike CRM, billing, or support — which all have credible open-source incumbents (Chatwoot, Cal.com, Lago, Focalboard) — **commission/ICM had no serious open-source project until now.**
 
 ---
 
-## Core Architecture
+## Screenshots
 
-```
-CRM / CSV → Ingestion → Immutable Event Log
-                              │
-                     Calculation Engine
-                 (query over events + active plan)
-                              │
-           ┌──────────────────┼──────────────────┐
-           │                  │                  │
-    Rep Statements      Dispute Workflow     Payout Export
-    (transparency)      (approval + audit)   (to payroll)
-```
-
-**Key design principle:** Commissions are computed as a *deterministic query over an immutable event log*, not a mutable running total — the same approach usage-based billing engines use. Retroactive edits recompute cleanly, and every dollar traces to the exact rule + event that produced it.
-
-The calculation engine (`src/engine/`) is a **pure TypeScript module with zero database dependencies** — fully unit-testable, deterministic, and embeddable anywhere.
+<div align="center">
+<img src="screenshots/dashboard.png" alt="Dashboard" width="48%" />
+<img src="screenshots/dashboard-dark.png" alt="Dark mode" width="48%" />
+<img src="screenshots/deals.png" alt="Deals page" width="48%" />
+<img src="screenshots/plan-detail.png" alt="Plan detail with simulation" width="48%" />
+<img src="screenshots/statements.png" alt="Rep statements" width="48%" />
+<img src="screenshots/payouts.png" alt="Payouts" width="48%" />
+<img src="screenshots/events.png" alt="Event log / audit trail" width="48%" />
+<img src="screenshots/login.png" alt="Login page" width="48%" />
+</div>
 
 ---
 
 ## Features
 
-| Feature | Status |
+| Feature | Description |
 |---|---|
-| **CSV deal import** — paste, upload, or reload sample data. Idempotent dedup. Auto-creates payees. | ✅ |
-| **Plan builder** — visual composer: flat rate, tiered (marginal/retroactive), quota attainment, draw/guarantee, clawback. Field filters. | ✅ |
-| **Multi-payee splits** — co-owners via `co_owners` column (format: `sarah:30,bob:20`). Automatic deal expansion. | ✅ |
-| **Draw / Guarantee** — minimum commission per period. Pro-rata shortfall distribution. | ✅ |
-| **Clawback** — auto-reverse commission on churned/cancelled deals within a configurable lookback window. | ✅ |
-| **Event-sourced storage** — append-only event log. Corrections are new events, never overwrites. | ✅ |
-| **Recompute-on-change** — running a calculation always queries live events + current plan. Deterministic. | ✅ |
-| **Rep statements** — full "why did I earn this" breakdown: per-deal, per-rule trace with basis, rate, amount, detail. | ✅ |
-| **Dispute workflow** — per-statement comment thread. Approve → mark paid status workflow. | ✅ |
-| **CSV payout export** — one-click download per calculation run. | ✅ |
-| **GL export** — general-ledger-ready CSV with account codes for accounting integration. | ✅ |
-| **Plan simulation** — preview results without persisting. "What-if" mode on the plan page. | ✅ |
-| **Plan versioning** — every edit creates a new version; calculations reference the specific version used. | ✅ |
-| **Dark mode** — toggle in sidebar. Persists to localStorage. Respects prefers-color-scheme. | ✅ |
-| **Event log / audit trail** — raw event viewer at `/events` with expandable JSON payload. | ✅ |
-| **Deal search** — filter deals by ID, owner, value, or type. | ✅ |
-| **Pagination** — skip/take on all list endpoints. | ✅ |
-| **Authentication** — password-based login. API key support (`X-Api-Key` header). Opt-in via `APP_PASSWORD`. | ✅ |
-| **RBAC** — payee role field (admin/rep). `X-User-External-Id` header for rep-scoped views. | ✅ |
-| **Webhooks** — configurable endpoints with HMAC-SHA256 signatures. Auto-delivered on calculation completion. | ✅ |
-| **Rate limiting** — 200 req/min per IP. Configurable in middleware. | ✅ |
-| **Public API** — OpenAPI 3.0 spec at `/api/openapi.json`. Full REST coverage. | ✅ |
-| **Helm chart** — Kubernetes deployment, service, ingress in `helm/openicm/`. | ✅ |
-| **Commission trend** — historical runs view on dashboard for period-over-period comparison. | ✅ |
-| **Docker Compose self-hosting** — `docker compose up --build` with auto-migrate + seed. | ✅ |
+| **CSV deal import** | Paste, upload, or reload sample data. Idempotent dedup. Auto-creates payees. |
+| **Visual plan builder** | Flat rate, tiered (marginal/retroactive), quota attainment, draw/guarantee, clawback. Field filters. |
+| **Multi-payee splits** | Co-owners via `co_owners` column — automatic deal expansion with pro-rata splits. |
+| **Draw / Guarantee** | Minimum commission per period. Pro-rata shortfall distribution. |
+| **Clawback** | Auto-reverse commission on churned/cancelled deals within configurable lookback. |
+| **Event-sourced storage** | Append-only event log. Corrections are new events, never overwrites. |
+| **Recompute-on-change** | Running a calculation always queries live events + current plan. Deterministic and idempotent. |
+| **Rep statements** | Full per-deal, per-rule trace with basis, rate, amount, and detail. |
+| **Dispute workflow** | Per-statement comment threads. Approve → paid status workflow. |
+| **Payout export (CSV/GL)** | One-click download per run. GL-ready CSV with account codes for accounting integration. |
+| **Plan simulation** | Preview "what-if" results without persisting. |
+| **Plan versioning** | Every edit creates a new version. Calculations reference the specific version. |
+| **Dark mode** | Toggle in sidebar. Persists to localStorage. Respects `prefers-color-scheme`. |
+| **Event log / audit trail** | Raw event viewer with expandable JSON payload. |
+| **Authentication** | Password-based login + API key auth (`X-Api-Key` header). Opt-in via `APP_PASSWORD`. |
+| **RBAC** | Payee roles (admin/rep). Rep-scoped views via `X-User-External-Id` header. |
+| **Webhooks** | Configurable endpoints with HMAC-SHA256 signatures. Auto-delivered on calculation complete. |
+| **Rate limiting** | 200 req/min per IP. |
+| **Public API** | Full OpenAPI 3.0 spec at `/api/openapi.json`. |
+| **Helm chart** | Kubernetes deployment, service, and ingress included. |
+
+All features ✅ complete and tested.
 
 ---
 
-## Roadmap
+## Architecture
 
-| Phase | Scope |
-|---|---|
-| **v0.2 — Current** | Basic auth · API keys · Dark mode · Multi-payee splits · Draw/guarantee · Clawback · Dispute workflow · Plan simulation · Event log · Deal search · Pagination · RBAC · Webhooks · Rate limiting · GL export · Helm chart · OpenAPI spec · Commission trend · All features complete |
+```
+CRM / CSV → Ingestion → Immutable Event Log
+                             │
+                    Calculation Engine
+                (query over events + active plan)
+                             │
+          ┌──────────────────┼──────────────────┐
+          │                  │                  │
+   Rep Statements      Dispute Workflow     Payout Export
+   (transparency)      (approval + audit)   (GL/payroll)
+```
+
+**Key design principle:** Commissions are computed as a *deterministic query over an immutable event log*, not a mutable running total — the same approach usage-based billing engines use. Retroactive edits recompute cleanly, and every dollar traces to the exact rule + event that produced it.
+
+The calculation engine [`src/engine/`](src/engine/) is a **pure TypeScript module with zero database dependencies** — fully unit-testable, deterministic, and embeddable anywhere.
+
+---
+
+## Quick Start
+
+### Docker (recommended)
+
+```bash
+docker run --rm -p 3000:3000 ghcr.io/kyssta-exe/openicm
+# → http://localhost:3000 (sample data pre-loaded, auth disabled)
+```
+
+### Docker Compose
+
+```bash
+git clone https://github.com/kyssta-exe/OpenICM.git
+cd OpenICM
+docker compose up --build -d
+```
+
+**First time?** See the [Setup Guide](SETUP.md) for production deployment with auth, custom domains, and SSL.
 
 ---
 
@@ -132,26 +154,36 @@ src/
 ├── engine/          # Pure calculation engine (zero deps)
 │   ├── calculator.ts
 │   ├── reconstruct.ts
-│   └── rules/       # flat-rate, tiered-rate, quota-attainment
+│   └── rules/       # flat-rate, tiered-rate, quota-attainment, clawback
 ├── app/
-│   ├── api/         # Route handlers (12 endpoints)
+│   ├── api/         # Route handlers (18+ endpoints)
 │   └── (dashboard)/ # UI pages (dashboard, deals, plans, statements, payouts)
 ├── components/
-│   ├── ui/          # UI primitives (button, card, table, etc.)
+│   ├── ui/          # shadcn/ui primitives
 │   └── plan-builder.tsx  # Visual rule composer
 └── lib/             # DB client, CSV, calc orchestration, validation
+helm/                # Kubernetes Helm chart
 ```
 
 See [handoff.md](handoff.md) for the complete architecture, 10 ADRs, and file-by-file breakdown.
 
 ---
 
-## Contributing
+## Community & Support
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines. This is an early-stage project — issues, PRs, and discussions are welcome.
+- **Discussions** — feature requests, Q&A, show-and-tell
+- **Issues** — bug reports, tracked and triaged
+- **Contributing** — see [CONTRIBUTING.md](CONTRIBUTING.md)
+- **Star this repo** ⭐ — it helps others find the project
 
 ---
 
 ## License
 
 [AGPL-3.0](LICENSE) — Free to use, modify, and distribute. If you build a managed cloud service on top, you must contribute your modifications back.
+
+---
+
+<p align="center">
+  <strong>⭐ Star us on GitHub — it helps people find this project ⭐</strong>
+</p>

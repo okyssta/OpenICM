@@ -2,48 +2,52 @@
 
 Setup and deployment instructions for OpenICM, the open-source Incentive Compensation Management engine.
 
-## Prerequisites
-
-- [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/) (recommended)
-- Or: Node.js 22+, PostgreSQL 16+, npm
-
 ---
 
 ## Quick Start (Docker)
 
-**The fastest way to get OpenICM running with sample data:**
-
 ```bash
-# 1. Clone the repository
 git clone https://github.com/kyssta-exe/OpenICM.git
 cd OpenICM
-
-# 2. Start with Docker Compose
-#    This builds the app, starts Postgres, pushes the schema,
-#    seeds sample data, and launches the server.
 docker compose up --build -d
-
-# 3. Open the app
-open http://localhost:3000
+# → http://localhost:3000
 ```
 
-Sample data loads automatically on first start: 3 payees (Alice, Bob, Carol), 5 deals, and a quarterly sales plan (8% base + 4% accelerator above $100k quota).
+Sample data loads automatically on first start: 3 payees (Alice, Bob, Carol), 5 deals, and a quarterly sales plan.
 
 ### First-Time User Flow
 
 1. **Dashboard** — see org stats at a glance
-2. **Deals** -> click "Load sample" -> **Import** (or paste your own CSV)
-3. **Plans** -> **New plan** -> configure rules -> assign payees -> **Create**
-4. Open the plan -> **Calculate commissions** (leave dates blank for current period)
-5. **Statements** -> open one to see the per-deal audit trail -> **Approve**
-6. **Payouts** -> find the run -> **CSV** to export for payroll
+2. **Deals** → "Load sample" → **Import**
+3. **Plans** → **New plan** → configure rules → assign payees → **Create**
+4. Open the plan → **Calculate commissions**
+5. **Statements** → open one to see per-deal audit trail → **Approve**
+6. **Payouts** → find the run → **CSV** to export for payroll
 
-### Stop the server
+---
+
+## Production Deployment
+
+### One-command deploy (Ubuntu VPS)
 
 ```bash
-docker compose down
-# Add --volumes to delete the database data:
-docker compose down --volumes
+bash <(curl -sL https://raw.githubusercontent.com/kyssta-exe/OpenICM/main/deploy.sh) your-domain.com
+```
+
+This installs Docker, pulls the image, configures HTTPS via Caddy, and starts the application.
+
+### Manual production deploy
+
+```bash
+git clone https://github.com/kyssta-exe/OpenICM.git
+cd OpenICM
+APP_PASSWORD=your-password docker compose up --build -d
+```
+
+For nginx/Caddy with HTTPS:
+
+```bash
+docker compose -f docker-compose.prod.yml up -d --build
 ```
 
 ---
@@ -51,8 +55,6 @@ docker compose down --volumes
 ## Local Development (without Docker)
 
 ### 1. Set up PostgreSQL
-
-Start a Postgres 16 instance. With Docker:
 
 ```bash
 docker run -d --name openicm-db \
@@ -93,8 +95,8 @@ npm run dev
 ### 6. Verify
 
 ```bash
-npm test        # 17 unit tests (engine)
-npm run typecheck  # TypeScript check
+npm test           # 17+ unit tests
+npm run typecheck  # TypeScript strict check
 npm run build      # Production build
 ```
 
@@ -106,12 +108,12 @@ npm run build      # Production build
 
 | Variable | Default | Description |
 |---|---|---|
-| `DATABASE_URL` | `postgresql://openicm:openicm@localhost:5432/openicm?schema=public` | PostgreSQL connection string |
+| `DATABASE_URL` | `postgresql://openicm:***@localhost:5432/openicm?schema=public` | PostgreSQL connection string |
 | `ORG_ID` | (empty — auto-selects first org) | Explicit org scoping for multi-tenant setups |
 | `SEED_ON_START` | (not set) | In Docker, set to `true` to seed sample data on first run |
 | `APP_PASSWORD` | (empty — no auth) | Set a password to enable single-user authentication |
 | `AUTH_SECRET` | (auto) | Secret used to sign session tokens |
-| `API_KEY` | (empty) | API key for programmatic access (X-Api-Key header) |
+| `API_KEY` | (empty) | API key for programmatic access (`X-Api-Key` header) |
 
 ### Ports
 
@@ -122,51 +124,59 @@ npm run build      # Production build
 
 ---
 
-## Project Structure
-
-```
-src/
-├── engine/          # Pure calculation engine (zero dependencies)
-│   ├── calculator.ts
-│   ├── reconstruct.ts
-│   └── rules/       # flat-rate, tiered-rate, quota-attainment
-├── app/
-│   ├── api/         # 12 REST endpoints
-│   └── (dashboard)/ # UI pages
-├── components/
-│   ├── ui/          # UI primitives
-│   └── plan-builder.tsx
-└── lib/             # DB client, CSV, calc orchestration
-```
-
-See [handoff.md](handoff.md) for the complete architecture documentation.
-
----
-
 ## API Endpoints
 
 | Route | Method | Purpose |
 |---|---|---|
 | `/api/deals` | GET | Reconstructed deal snapshots |
-| `/api/deals/import` | POST | CSV import (text or file upload) |
+| `/api/deals/import` | POST | CSV import |
 | `/api/payees` | GET, POST | List / create payees |
+| `/api/payees/me` | GET | Current user context (RBAC) |
 | `/api/plans` | GET, POST | List / create plans |
-| `/api/plans/[id]` | GET, PUT, DELETE | Plan detail, update, delete |
+| `/api/plans/[id]` | GET, PUT, DELETE | Plan CRUD |
 | `/api/plans/[id]/calculate` | POST | Run commission calculation |
+| `/api/plans/[id]/simulate` | POST | Preview without persisting |
 | `/api/runs` | GET | List calculation runs |
 | `/api/statements` | GET | List statements |
 | `/api/statements/[id]` | GET, PATCH | Statement detail, approve/paid |
-| `/api/payouts/export` | GET | Download CSV payout export |
+| `/api/statements/[id]/disputes` | GET, POST | Dispute comments |
+| `/api/payouts/export` | GET | CSV payout export |
+| `/api/payouts/gl` | GET | GL-ready CSV export |
+| `/api/webhooks` | GET, POST | Webhook CRUD |
+| `/api/webhooks/[id]` | GET, PUT, DELETE | Webhook detail/update/delete |
+| `/api/events` | GET | Raw event log (audit trail) |
+| `/api/openapi` | GET | OpenAPI 3.0 spec |
+
+Full OpenAPI specification at `/api/openapi.json` when the server is running.
 
 ---
 
-## Production Deployment
+## Project Structure
 
-For production, consider:
+```
+src/
+├── engine/          # Pure calculation engine (zero deps)
+│   ├── calculator.ts
+│   ├── reconstruct.ts
+│   └── rules/       # flat-rate, tiered-rate, quota-attainment, clawback
+├── app/
+│   ├── api/         # 18+ REST endpoints
+│   └── (dashboard)/ # UI pages (dashboard, deals, plans, statements, payouts)
+├── components/
+│   ├── ui/          # shadcn/ui primitives
+│   └── plan-builder.tsx
+└── lib/             # DB client, CSV, calc orchestration, validation
+helm/                # Kubernetes Helm chart
+```
 
-- Setting a strong Postgres password in `DATABASE_URL`
-- Adding a reverse proxy (nginx/Caddy) with HTTPS
-- Setting `ORG_ID` explicitly
-- Disabling `SEED_ON_START` after initial setup
-- Configuring regular database backups
-- Setting up monitoring and alerting
+See [handoff.md](handoff.md) for architecture documentation and ADRs.
+
+---
+
+## Production Tips
+
+- Set a strong `AUTH_SECRET` and `APP_PASSWORD`
+- Use a reverse proxy (nginx/Caddy) with HTTPS
+- Set `ORG_ID` explicitly
+- Disable `SEED_ON_START` after initial setup
+- Configure regular PostgreSQL backups
