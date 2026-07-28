@@ -179,6 +179,7 @@ model Statement {
   org   Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
   run   CalculationRun @relation(fields: [runId], references: [id], onDelete: Cascade)
   payee Payee          @relation(fields: [payeeId], references: [id], onDelete: Cascade)
+  disputes DisputeComment[]
 
   @@unique([runId, payeeId])
   @@index([orgId, payeeId])
@@ -197,4 +198,16 @@ model PayoutExport {
   run CalculationRun @relation(fields: [runId], references: [id], onDelete: Cascade)
 
   @@index([orgId])
+}
+
+model DisputeComment {
+  id          String   @id @default(cuid())
+  statementId String
+  author      String
+  body        String
+  createdAt   DateTime @default(now())
+
+  statement Statement @relation(fields: [statementId], references: [id], onDelete: Cascade)
+
+  @@index([statementId])
 }

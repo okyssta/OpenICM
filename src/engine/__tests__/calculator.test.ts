@@ -15,6 +15,7 @@ function deal(
     owner,
     closedAt,
     split,
+    coOwners: [],
     deleted: false,
     fields: { owner, closed_at: closedAt, value, ...extra },
   };

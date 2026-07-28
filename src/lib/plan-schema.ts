@@ -49,10 +49,20 @@ const draw = z.object({
   filters: z.array(filterSchema).optional(),
 });
 
+const clawback = z.object({
+  id: z.string().min(1),
+  type: z.literal("clawback"),
+  name: z.string().min(1),
+  lookbackMonths: z.number().int().min(1).max(36),
+  basis: z.string().min(1),
+  reversalRate: z.number().min(0).max(1),
+  filters: z.array(filterSchema).optional(),
+});
+
 export const planDefinitionSchema = z.object({
   period: z.enum(["monthly", "quarterly", "annual"]),
   currency: z.string().min(1).default("USD"),
-  components: z.array(z.discriminatedUnion("type", [flatRate, tieredRate, quotaAttainment, draw])),
+  components: z.array(z.discriminatedUnion("type", [flatRate, tieredRate, quotaAttainment, draw, clawback])),
 });
 
 export type PlanDefinitionInput = z.infer<typeof planDefinitionSchema>;

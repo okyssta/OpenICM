@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, Check, MessageSquare, Send } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -39,11 +41,22 @@ type Line = {
   detail: Record<string, unknown>;
 };
 
+type Comment = {
+  id: string;
+  author: string;
+  body: string;
+  createdAt: string;
+};
+
 export default function StatementDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [statement, setStatement] = useState<Statement | null>(null);
   const [lines, setLines] = useState<Line[]>([]);
   const [status, setStatus] = useState("");
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [author, setAuthor] = useState("");
+  const [body, setBody] = useState("");
+  const [sending, setSending] = useState(false);
 
   function load() {
     fetch(`/api/statements/${id}`)
@@ -53,6 +66,9 @@ export default function StatementDetailPage() {
         setLines(d.lines ?? []);
         setStatus(d.statement.status);
       });
+    fetch(`/api/statements/${id}/disputes`)
+      .then((r) => r.json())
+      .then((d) => setComments(d.comments ?? []));
   }
 
   useEffect(() => {
@@ -67,6 +83,24 @@ export default function StatementDetailPage() {
       body: JSON.stringify({ status: next }),
     });
     setStatus(next);
+  }
+
+  async function addComment() {
+    if (!body.trim()) return;
+    setSending(true);
+    await fetch(`/api/statements/${id}/disputes`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        author: author.trim() || "Finance",
+        body: body.trim(),
+      }),
+    });
+    setBody("");
+    setSending(false);
+    fetch(`/api/statements/${id}/disputes`)
+      .then((r) => r.json())
+      .then((d) => setComments(d.comments ?? []));
   }
 
   if (!statement) return <p className="p-8 text-sm text-muted-foreground">Loading…</p>;
@@ -168,6 +202,52 @@ export default function StatementDetailPage() {
             </CardContent>
           </Card>
         ))}
+
+        {/* Dispute / Comments section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" /> Dispute comments
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {comments.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No comments yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {comments.map((c) => (
+                  <div key={c.id} className="rounded-md border border-border p-3">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                      <span className="font-medium">{c.author}</span>
+                      <span>{formatDate(c.createdAt)}</span>
+                    </div>
+                    <p className="text-sm whitespace-pre-wrap">{c.body}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="space-y-2 border-t border-border pt-3">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Your name"
+                  value={author}
+                  onChange={(e) => setAuthor(e.target.value)}
+                  className="w-40"
+                />
+                <Input
+                  placeholder="Type your comment..."
+                  value={body}
+                  onChange={(e) => setBody(e.target.value)}
+                  className="flex-1"
+                  onKeyDown={(e) => e.key === "Enter" && addComment()}
+                />
+                <Button size="sm" onClick={addComment} disabled={sending || !body.trim()}>
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </>
   );

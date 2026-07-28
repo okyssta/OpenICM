@@ -51,11 +51,22 @@ export type DrawComponent = {
   filters?: RuleFilter[];
 };
 
+export type ClawbackComponent = {
+  id: string;
+  type: "clawback";
+  name: string;
+  lookbackMonths: number; // how many months back to check for churn
+  basis: string;
+  reversalRate: number; // % of commission to reverse (1 = 100%)
+  filters?: RuleFilter[];
+};
+
 export type PlanComponent =
   | FlatRateComponent
   | TieredRateComponent
   | QuotaAttainmentComponent
-  | DrawComponent;
+  | DrawComponent
+  | ClawbackComponent;
 
 export type PlanDefinition = {
   period: Period;
@@ -70,6 +81,8 @@ export type DealSnapshot = {
   owner: string;
   closedAt: string;
   split: number;
+  /** Multi-payee co-owners: comma-separated "owner:pct" pairs, e.g. "sarah:30,bob:20" */
+  coOwners: { owner: string; split: number }[];
   fields: Record<string, DealFieldValue>;
   deleted: boolean;
 };

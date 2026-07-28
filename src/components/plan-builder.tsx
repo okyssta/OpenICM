@@ -50,7 +50,9 @@ export function PlanBuilder({ value, onChange }: Props) {
       c = { ...base, type, mode: "marginal", tiers: [{ upTo: null, rate: 0.1 }] };
     else if (type === "quota_attainment")
       c = { ...base, type, quota: 100000, bands: [{ upTo: 1, rate: 0.08 }, { upTo: null, rate: 0.12 }] };
-    else c = { ...base, type, guarantee: 5000 };
+    else if (type === "draw")
+      c = { ...base, type, guarantee: 5000 };
+    else c = { ...base, type, lookbackMonths: 6, basis: "value", reversalRate: 1 };
     patch({ components: [...value.components, c] });
   }
 
@@ -104,6 +106,9 @@ export function PlanBuilder({ value, onChange }: Props) {
         <Button variant="outline" size="sm" onClick={() => addComponent("draw")}>
           <Plus className="h-4 w-4" /> Draw / Guarantee
         </Button>
+        <Button variant="outline" size="sm" onClick={() => addComponent("clawback")}>
+          <Plus className="h-4 w-4" /> Clawback
+        </Button>
       </div>
     </div>
   );
@@ -119,7 +124,7 @@ function ComponentEditor({
   onRemove: () => void;
 }) {
   const typeLabel =
-    c.type === "flat_rate" ? "Flat rate" : c.type === "tiered_rate" ? "Tiered rate" : c.type === "quota_attainment" ? "Quota attainment" : "Draw / Guarantee";
+    c.type === "flat_rate" ? "Flat rate" : c.type === "tiered_rate" ? "Tiered rate" : c.type === "quota_attainment" ? "Quota attainment" : c.type === "draw" ? "Draw / Guarantee" : "Clawback";
 
   return (
     <Card>
@@ -202,6 +207,38 @@ function ComponentEditor({
                 value={c.guarantee}
                 onChange={(e) => onChange({ ...c, guarantee: Number(e.target.value) })}
               />
+            </div>
+            <div className="sm:w-1/2 space-y-1.5">
+              <Label>Basis field</Label>
+              <Input value={c.basis} onChange={(e) => onChange({ ...c, basis: e.target.value })} />
+            </div>
+          </div>
+        )}
+
+        {c.type === "clawback" && (
+          <div className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label>Lookback period (months)</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={36}
+                  value={c.lookbackMonths}
+                  onChange={(e) => onChange({ ...c, lookbackMonths: Number(e.target.value) })}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Reversal rate (%)</Label>
+                <Input
+                  type="number"
+                  step="1"
+                  min={0}
+                  max={100}
+                  value={c.reversalRate * 100}
+                  onChange={(e) => onChange({ ...c, reversalRate: Number(e.target.value) / 100 })}
+                />
+              </div>
             </div>
             <div className="sm:w-1/2 space-y-1.5">
               <Label>Basis field</Label>

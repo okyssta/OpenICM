@@ -81,7 +81,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
         <div className="flex items-center justify-between border-t border-border p-4">
           <span className="text-xs text-muted-foreground">
-            Open-source ICM<br />v0.1 — MVP
+            Open-source ICM<br />v0.2 — Stable
           </span>
           <div className="flex items-center gap-1">
             {mounted && authEnabled && (

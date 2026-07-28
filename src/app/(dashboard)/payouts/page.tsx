@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download } from "lucide-react";
+import { Download, BookOpen } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -81,11 +81,18 @@ export default function PayoutsPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <a href={`/api/payouts/export?runId=${r.id}`} download>
-                          <Button size="sm" variant="outline">
-                            <Download className="h-4 w-4" /> CSV
-                          </Button>
-                        </a>
+                        <div className="flex justify-end gap-1">
+                          <a href={`/api/payouts/export?runId=${r.id}`} download>
+                            <Button size="sm" variant="outline">
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          </a>
+                          <a href={`/api/payouts/gl?runId=${r.id}`} download>
+                            <Button size="sm" variant="outline">
+                              <BookOpen className="h-4 w-4" />
+                            </Button>
+                          </a>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

@@ -3,6 +3,7 @@ import { calcFlatRate } from "./flat-rate";
 import { calcTieredRate } from "./tiered-rate";
 import { calcQuotaAttainment } from "./quota-attainment";
 import { calcDraw } from "./draw";
+import { calcClawback } from "./clawback";
 
 export function calcComponent(
   deals: DealSnapshot[],
@@ -17,6 +18,8 @@ export function calcComponent(
       return calcQuotaAttainment(deals, c);
     case "draw":
       return calcDraw(deals, c);
+    case "clawback":
+      return calcClawback(deals, c);
     default: {
       const _exhaustive: never = c;
       throw new Error(`Unknown component type: ${JSON.stringify(_exhaustive)}`);

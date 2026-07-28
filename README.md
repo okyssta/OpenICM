@@ -3,7 +3,7 @@
 **Open-source Incentive Compensation Management (ICM) — a self-hostable alternative to CaptivateIQ, Xactly, and Spiff.**
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
-![Status](https://img.shields.io/badge/Status-MVP--v0.1-yellow)
+![Status](https://img.shields.io/badge/Status-v0.2--stable-green)
 [![Build](https://img.shields.io/badge/Build-passing-brightgreen)]()
 
 Companies with variable pay — sales reps, partner programs, affiliates, recruiters — outgrow spreadsheets fast. Manual commission calc is error-prone, unauditable, and breaks the moment a plan has tiers, accelerators, clawbacks, splits, or a retroactively-edited deal. **OpenICM is the first open-source system that solves this end-to-end.**
@@ -69,18 +69,28 @@ The calculation engine (`src/engine/`) is a **pure TypeScript module with zero d
 
 ---
 
-## Features (MVP v0.1)
+## Features
 
 | Feature | Status |
 |---|---|
 | **CSV deal import** — paste, upload, or reload sample data. Idempotent dedup. Auto-creates payees. | ✅ |
-| **Plan builder** — visual composer: flat rate, tiered (marginal/retroactive), quota attainment with accelerators. Field filters. | ✅ |
+| **Plan builder** — visual composer: flat rate, tiered (marginal/retroactive), quota attainment, draw/guarantee, clawback. Field filters. | ✅ |
+| **Multi-payee splits** — co-owners via `co_owners` column (format: `sarah:30,bob:20`). Automatic deal expansion. | ✅ |
+| **Draw / Guarantee** — minimum commission per period. Pro-rata shortfall distribution. | ✅ |
+| **Clawback** — auto-reverse commission on churned/cancelled deals within a configurable lookback window. | ✅ |
 | **Event-sourced storage** — append-only event log. Corrections are new events, never overwrites. | ✅ |
 | **Recompute-on-change** — running a calculation always queries live events + current plan. Deterministic. | ✅ |
 | **Rep statements** — full "why did I earn this" breakdown: per-deal, per-rule trace with basis, rate, amount, detail. | ✅ |
-| **Approval workflow** — draft → approved → paid statuses with PATCH API. | ✅ |
+| **Dispute workflow** — per-statement comment thread. Approve → mark paid status workflow. | ✅ |
 | **CSV payout export** — one-click download per calculation run. | ✅ |
+| **GL export** — general-ledger-ready CSV with account codes for accounting integration. | ✅ |
+| **Plan simulation** — preview results without persisting. "What-if" mode on the plan page. | ✅ |
 | **Plan versioning** — every edit creates a new version; calculations reference the specific version used. | ✅ |
+| **Dark mode** — toggle in sidebar. Persists to localStorage. Respects prefers-color-scheme. | ✅ |
+| **Event log / audit trail** — raw event viewer at `/events` with expandable JSON payload. | ✅ |
+| **Deal search** — filter deals by ID, owner, value, or type. | ✅ |
+| **Pagination** — skip/take on all list endpoints. | ✅ |
+| **Authentication** — password-based login. API key support (`X-Api-Key` header). Opt-in via `APP_PASSWORD`. | ✅ |
 | **Docker Compose self-hosting** — `docker compose up --build` with auto-migrate + seed. | ✅ |
 
 ---
@@ -89,10 +99,10 @@ The calculation engine (`src/engine/`) is a **pure TypeScript module with zero d
 
 | Phase | Scope |
 |---|---|
-| **v0.2** | CRM connectors (Salesforce/HubSpot) · Basic auth · Dispute workflow · RBAC |
-| **v0.3** | Multi-payee splits · Clawbacks · Draws/guarantees · Plan simulation · GL export |
-| **v0.4** | Payroll connectors (Gusto/Deel) · SSO (SAML/OIDC) · Public API + webhooks · Audit hardening |
-| **v1.0** | Managed cloud (open-core) · Plugin system · Mobile UI · Advanced forecasting · Helm chart |
+| **v0.2 — Done** | ~~CRM connectors (Salesforce/HubSpot)~~ · Basic auth · Dispute workflow · Multi-payee splits · Draws/guarantees · Plan simulation · Clawback · Dark mode · Event log · GL export · Pagination |
+| **v0.3** | CRM connectors (Salesforce/HubSpot webhooks) · RBAC (admin vs rep views) · Multi-currency · Payroll connectors (Gusto/Deel) · Public REST API + webhooks |
+| **v0.4** | SSO (SAML/OIDC) · Advanced forecasting · Audit hardening (SOX) · Rate limiting · Helm chart |
+| **v1.0** | Managed cloud (open-core) · Plugin system for custom rule types · Mobile UI |
 
 ---
 

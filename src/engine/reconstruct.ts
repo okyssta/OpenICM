@@ -15,6 +15,23 @@ function toFieldValue(v: unknown): DealFieldValue {
   return String(v);
 }
 
+function parseCoOwners(raw: unknown): { owner: string; split: number }[] {
+  if (typeof raw !== "string" || !raw) return [];
+  return raw
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => {
+      const colon = part.lastIndexOf(":");
+      if (colon === -1) return { owner: part, split: 0.5 };
+      return {
+        owner: part.slice(0, colon).trim(),
+        split: Math.min(1, Math.max(0, Number(part.slice(colon + 1)) / 100)),
+      };
+    })
+    .filter((c) => c.owner);
+}
+
 export function reconstructDeals(events: RawEvent[]): DealSnapshot[] {
   const byDeal = new Map<string, RawEvent[]>();
   for (const e of events) {
@@ -49,12 +66,14 @@ export function reconstructDeals(events: RawEvent[]): DealSnapshot[] {
     const splitRaw = fields["split"];
     const splitPct =
       typeof splitRaw === "number" && Number.isFinite(splitRaw) ? splitRaw : 100;
+    const coOwners = parseCoOwners(fields["co_owners"]);
 
     deals.push({
       externalId,
       owner,
       closedAt,
       split: splitPct / 100,
+      coOwners,
       fields,
       deleted,
     });
