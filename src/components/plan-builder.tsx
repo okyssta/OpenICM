@@ -48,7 +48,9 @@ export function PlanBuilder({ value, onChange }: Props) {
     if (type === "flat_rate") c = { ...base, type, rate: 0.1 };
     else if (type === "tiered_rate")
       c = { ...base, type, mode: "marginal", tiers: [{ upTo: null, rate: 0.1 }] };
-    else c = { ...base, type, quota: 100000, bands: [{ upTo: 1, rate: 0.08 }, { upTo: null, rate: 0.12 }] };
+    else if (type === "quota_attainment")
+      c = { ...base, type, quota: 100000, bands: [{ upTo: 1, rate: 0.08 }, { upTo: null, rate: 0.12 }] };
+    else c = { ...base, type, guarantee: 5000 };
     patch({ components: [...value.components, c] });
   }
 
@@ -99,6 +101,9 @@ export function PlanBuilder({ value, onChange }: Props) {
         <Button variant="outline" size="sm" onClick={() => addComponent("quota_attainment")}>
           <Plus className="h-4 w-4" /> Quota attainment
         </Button>
+        <Button variant="outline" size="sm" onClick={() => addComponent("draw")}>
+          <Plus className="h-4 w-4" /> Draw / Guarantee
+        </Button>
       </div>
     </div>
   );
@@ -114,7 +119,7 @@ function ComponentEditor({
   onRemove: () => void;
 }) {
   const typeLabel =
-    c.type === "flat_rate" ? "Flat rate" : c.type === "tiered_rate" ? "Tiered rate" : "Quota attainment";
+    c.type === "flat_rate" ? "Flat rate" : c.type === "tiered_rate" ? "Tiered rate" : c.type === "quota_attainment" ? "Quota attainment" : "Draw / Guarantee";
 
   return (
     <Card>
@@ -186,6 +191,23 @@ function ComponentEditor({
               onChange={(bands) => onChange({ ...c, bands })}
             />
           </>
+        )}
+
+        {c.type === "draw" && (
+          <div className="space-y-4">
+            <div className="sm:w-1/2 space-y-1.5">
+              <Label>Guarantee amount (per period)</Label>
+              <Input
+                type="number"
+                value={c.guarantee}
+                onChange={(e) => onChange({ ...c, guarantee: Number(e.target.value) })}
+              />
+            </div>
+            <div className="sm:w-1/2 space-y-1.5">
+              <Label>Basis field</Label>
+              <Input value={c.basis} onChange={(e) => onChange({ ...c, basis: e.target.value })} />
+            </div>
+          </div>
         )}
 
         <FilterEditor

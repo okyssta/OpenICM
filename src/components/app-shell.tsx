@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
@@ -13,6 +13,7 @@ import {
   Sun,
   Moon,
   Coins,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -27,12 +28,16 @@ const nav = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [dark, setDark] = useState(false);
+  const [authEnabled, setAuthEnabled] = useState(true);
 
   useEffect(() => {
     setMounted(true);
     setDark(document.documentElement.classList.contains("dark"));
+    // Check if auth is configured by trying the me endpoint
+    fetch("/api/auth/me").catch(() => setAuthEnabled(false));
   }, []);
 
   function toggleTheme() {
@@ -40,6 +45,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     setDark(next);
     document.documentElement.classList.toggle("dark", next);
     try { localStorage.setItem("theme", next ? "dark" : "light"); } catch {}
+  }
+
+  async function signOut() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
   }
 
   return (
@@ -73,15 +83,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <span className="text-xs text-muted-foreground">
             Open-source ICM<br />v0.1 — MVP
           </span>
-          {mounted && (
-            <button
-              onClick={toggleTheme}
-              className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-              aria-label="Toggle dark mode"
-            >
-              {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </button>
-          )}
+          <div className="flex items-center gap-1">
+            {mounted && authEnabled && (
+              <button
+                onClick={signOut}
+                className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                aria-label="Sign out"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            )}
+            {mounted && (
+              <button
+                onClick={toggleTheme}
+                className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                aria-label="Toggle dark mode"
+              >
+                {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </button>
+            )}
+          </div>
         </div>
       </aside>
       <main className="flex-1 overflow-x-hidden">{children}</main>

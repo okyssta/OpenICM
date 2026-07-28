@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Play, Save, History } from "lucide-react";
+import { Play, Save, History, Eye } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,12 @@ type ResultStatement = {
   dealsCount: number;
   payee: { name: string };
 };
+type SimResult = {
+  payee: { name: string };
+  totalCommission: number;
+  dealsCount: number;
+  lines: { componentName: string; amount: number }[];
+};
 
 export default function PlanDetailPage() {
   const params = useParams<{ id: string }>();
@@ -36,8 +42,10 @@ export default function PlanDetailPage() {
   const [periodStart, setPeriodStart] = useState("");
   const [periodEnd, setPeriodEnd] = useState("");
   const [running, setRunning] = useState(false);
+  const [simming, setSimming] = useState(false);
   const [saving, setSaving] = useState(false);
   const [results, setResults] = useState<ResultStatement[] | null>(null);
+  const [simResults, setSimResults] = useState<SimResult[] | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
   function load() {
@@ -114,6 +122,28 @@ export default function PlanDetailPage() {
     setMessage(`Calculation complete — ${data.statements?.length ?? 0} statement(s) generated.`);
   }
 
+  async function simulate() {
+    setSimming(true);
+    setMessage(null);
+    setSimResults(null);
+    const body: Record<string, string> = {};
+    if (periodStart) body.periodStart = periodStart;
+    if (periodEnd) body.periodEnd = periodEnd;
+    const res = await fetch(`/api/plans/${id}/simulate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    setSimming(false);
+    if (!res.ok) {
+      setMessage(`Error: ${data.error ?? "simulation failed"}`);
+      return;
+    }
+    setSimResults(data.statements ?? []);
+    setMessage(`Simulation — ${data.statements?.length ?? 0} payee(s) evaluated.`);
+  }
+
   if (!definition) {
     return <p className="p-8 text-sm text-muted-foreground">Loading…</p>;
   }
@@ -160,8 +190,12 @@ export default function PlanDetailPage() {
               <Button className="w-full" onClick={run} disabled={running}>
                 {running ? "Calculating…" : "Calculate commissions"}
               </Button>
+              <Button className="w-full" variant="outline" onClick={simulate} disabled={simming}>
+                <Eye className="h-4 w-4" /> {simming ? "Simulating…" : "Simulate (preview)"}
+              </Button>
               {results && results.length > 0 && (
                 <div className="space-y-1 border-t border-border pt-3">
+                  <p className="text-xs font-medium text-muted-foreground">Saved results</p>
                   {results.map((s) => (
                     <Link
                       key={s.id}
@@ -171,6 +205,26 @@ export default function PlanDetailPage() {
                       <span>{s.payee.name}</span>
                       <span className="font-medium">{formatCurrency(s.totalCommission)}</span>
                     </Link>
+                  ))}
+                </div>
+              )}
+              {simResults && simResults.length > 0 && (
+                <div className="space-y-1 border-t border-border pt-3">
+                  <p className="text-xs font-medium text-muted-foreground">Simulation (not saved)</p>
+                  {simResults.map((s, i) => (
+                    <div key={i} className="text-sm">
+                      <div className="flex justify-between">
+                        <span>{s.payee.name}</span>
+                        <span className="font-medium">{formatCurrency(s.totalCommission)}</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground pl-2">
+                        {s.lines.filter((l) => l.amount > 0).map((l, j) => (
+                          <span key={j} className="mr-2">
+                            {l.componentName}: {formatCurrency(l.amount)}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}

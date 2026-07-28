@@ -1,19 +1,28 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { getOrgId } from "@/lib/org";
+import { Prisma } from "@prisma/client";
 import { planDefinitionSchema } from "@/lib/plan-schema";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const orgId = await getOrgId();
-  const plans = await db.plan.findMany({
-    where: { orgId },
-    orderBy: { createdAt: "desc" },
-    include: {
-      versions: { orderBy: { version: "desc" }, take: 1 },
-      _count: { select: { assignments: true } },
-    },
-  });
+  const url = req.nextUrl;
+  const skip = Math.max(0, Number(url.searchParams.get("skip")) || 0);
+  const take = Math.min(200, Math.max(1, Number(url.searchParams.get("take")) || 50));
+
+  const [plans, total] = await Promise.all([
+    db.plan.findMany({
+      where: { orgId },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take,
+      include: {
+        versions: { orderBy: { version: "desc" }, take: 1 },
+        _count: { select: { assignments: true } },
+      },
+    }),
+    db.plan.count({ where: { orgId } }),
+  ]);
   return NextResponse.json({
     plans: plans.map((p) => ({
       id: p.id,
@@ -25,6 +34,9 @@ export async function GET() {
       definition: p.versions[0]?.definition ?? null,
       assignmentCount: p._count.assignments,
     })),
+    total,
+    skip,
+    take,
   });
 }
 

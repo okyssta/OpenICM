@@ -42,10 +42,20 @@ export type QuotaAttainmentComponent = {
   filters?: RuleFilter[];
 };
 
+export type DrawComponent = {
+  id: string;
+  type: "draw";
+  name: string;
+  guarantee: number; // minimum commission per period
+  basis: string; // field used to calculate against (or "flat")
+  filters?: RuleFilter[];
+};
+
 export type PlanComponent =
   | FlatRateComponent
   | TieredRateComponent
-  | QuotaAttainmentComponent;
+  | QuotaAttainmentComponent
+  | DrawComponent;
 
 export type PlanDefinition = {
   period: Period;

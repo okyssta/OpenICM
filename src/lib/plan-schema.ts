@@ -40,10 +40,19 @@ const quotaAttainment = z.object({
   filters: z.array(filterSchema).optional(),
 });
 
+const draw = z.object({
+  id: z.string().min(1),
+  type: z.literal("draw"),
+  name: z.string().min(1),
+  guarantee: z.number().min(0),
+  basis: z.string().min(1),
+  filters: z.array(filterSchema).optional(),
+});
+
 export const planDefinitionSchema = z.object({
   period: z.enum(["monthly", "quarterly", "annual"]),
   currency: z.string().min(1).default("USD"),
-  components: z.array(z.discriminatedUnion("type", [flatRate, tieredRate, quotaAttainment])),
+  components: z.array(z.discriminatedUnion("type", [flatRate, tieredRate, quotaAttainment, draw])),
 });
 
 export type PlanDefinitionInput = z.infer<typeof planDefinitionSchema>;

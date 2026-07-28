@@ -109,6 +109,9 @@ npm run build      # Production build
 | `DATABASE_URL` | `postgresql://openicm:openicm@localhost:5432/openicm?schema=public` | PostgreSQL connection string |
 | `ORG_ID` | (empty — auto-selects first org) | Explicit org scoping for multi-tenant setups |
 | `SEED_ON_START` | (not set) | In Docker, set to `true` to seed sample data on first run |
+| `APP_PASSWORD` | (empty — no auth) | Set a password to enable single-user authentication |
+| `AUTH_SECRET` | (auto) | Secret used to sign session tokens |
+| `API_KEY` | (empty) | API key for programmatic access (X-Api-Key header) |
 
 ### Ports
 
