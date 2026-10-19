@@ -7,7 +7,7 @@ Setup and deployment instructions for OpenICM, the open-source Incentive Compens
 ## Quick Start (Docker)
 
 ```bash
-git clone https://github.com/kyssta-exe/OpenICM.git
+git clone https://github.com/okyssta/OpenICM.git
 cd OpenICM
 docker compose up --build -d
 # → http://localhost:3000
@@ -31,7 +31,7 @@ Sample data loads automatically on first start: 3 payees (Alice, Bob, Carol), 5 
 ### One-command deploy (Ubuntu VPS)
 
 ```bash
-bash <(curl -sL https://raw.githubusercontent.com/kyssta-exe/OpenICM/main/deploy.sh) your-domain.com
+bash <(curl -sL https://raw.githubusercontent.com/okyssta/OpenICM/main/deploy.sh) your-domain.com
 ```
 
 This installs Docker, pulls the image, configures HTTPS via Caddy, and starts the application.
@@ -39,7 +39,7 @@ This installs Docker, pulls the image, configures HTTPS via Caddy, and starts th
 ### Manual production deploy
 
 ```bash
-git clone https://github.com/kyssta-exe/OpenICM.git
+git clone https://github.com/okyssta/OpenICM.git
 cd OpenICM
 APP_PASSWORD=your-password docker compose up --build -d
 ```

@@ -4,7 +4,7 @@
 
 This is an early-stage open-source project. If you discover a security vulnerability, please report it privately by opening a GitHub Security Advisory at:
 
-**https://github.com/kyssta-exe/OpenICM/security/advisories**
+**https://github.com/okyssta/OpenICM/security/advisories**
 
 Do not report security issues in public GitHub issues.
 

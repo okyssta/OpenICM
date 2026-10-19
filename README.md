@@ -6,11 +6,11 @@
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 ![Status](https://img.shields.io/badge/Status-v0.2--stable-brightgreen)
-[![Build](https://github.com/kyssta-exe/OpenICM/actions/workflows/ci.yml/badge.svg)](https://github.com/kyssta-exe/OpenICM/actions)
+[![Build](https://github.com/okyssta/OpenICM/actions/workflows/ci.yml/badge.svg)](https://github.com/okyssta/OpenICM/actions)
 [![Docker](https://img.shields.io/badge/docker-ready-2496ED?logo=docker)](https://hub.docker.com/r/kysstaexe/openicm)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
 
-**[✨ Live Demo](https://openicm.example.com) · [📖 Docs](SETUP.md) · [🐛 Report Bug](https://github.com/kyssta-exe/OpenICM/issues) · [💬 Discussions](https://github.com/kyssta-exe/OpenICM/discussions)**
+**[✨ Live Demo](https://openicm.example.com) · [📖 Docs](SETUP.md) · [🐛 Report Bug](https://github.com/okyssta/OpenICM/issues) · [💬 Discussions](https://github.com/okyssta/OpenICM/discussions)**
 
 </div>
 
@@ -21,14 +21,14 @@ Companies with variable pay — sales reps, partner programs, affiliates, recrui
 **Try it in 30 seconds:**
 
 ```bash
-docker run --rm -p 3000:3000 ghcr.io/kyssta-exe/openicm
+docker run --rm -p 3000:3000 ghcr.io/okyssta/openicm
 # → http://localhost:3000 (sample data pre-loaded)
 ```
 
 Or deploy instantly:
 
 [![Deploy to Railway](https://img.shields.io/badge/Deploy-Railway-0B0D0E?logo=railway)](https://railway.app/template/openicm)
-[![Deploy to Render](https://img.shields.io/badge/Deploy-Render-46E3B7?logo=render)](https://render.com/deploy?repo=https://github.com/kyssta-exe/OpenICM)
+[![Deploy to Render](https://img.shields.io/badge/Deploy-Render-46E3B7?logo=render)](https://render.com/deploy?repo=https://github.com/okyssta/OpenICM)
 [![Deploy on Zeabur](https://img.shields.io/badge/Deploy-Zeabur-FA5252?logo=zeabur)](https://zeabur.com/templates/openicm)
 
 ---
@@ -115,14 +115,14 @@ The calculation engine [`src/engine/`](src/engine/) is a **pure TypeScript modul
 ### Docker (recommended)
 
 ```bash
-docker run --rm -p 3000:3000 ghcr.io/kyssta-exe/openicm
+docker run --rm -p 3000:3000 ghcr.io/okyssta/openicm
 # → http://localhost:3000 (sample data pre-loaded, auth disabled)
 ```
 
 ### Docker Compose
 
 ```bash
-git clone https://github.com/kyssta-exe/OpenICM.git
+git clone https://github.com/okyssta/OpenICM.git
 cd OpenICM
 docker compose up --build -d
 ```

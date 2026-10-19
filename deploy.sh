@@ -23,7 +23,7 @@ docker compose version &>/dev/null || {
 mkdir -p /opt/openicm && cd /opt/openicm
 
 # 4. Download docker-compose.yml
-curl -sL "https://raw.githubusercontent.com/kyssta-exe/OpenICM/main/docker-compose.yml" -o docker-compose.yml
+curl -sL "https://raw.githubusercontent.com/okyssta/OpenICM/main/docker-compose.yml" -o docker-compose.yml
 
 # 5. Set up environment
 cat > .env <<EOF

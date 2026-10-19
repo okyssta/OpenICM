@@ -12,7 +12,7 @@ Thanks for your interest! This is an early-stage project and every contribution 
 ## Development Setup
 
 ```bash
-git clone https://github.com/kyssta-exe/OpenICM.git
+git clone https://github.com/okyssta/OpenICM.git
 cd OpenICM
 npm install
 cp .env.example .env.local  # Set DATABASE_URL
